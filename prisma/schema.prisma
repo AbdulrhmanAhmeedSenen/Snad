@@ -1,5 +1,5 @@
 // SANAD ERP SaaS - Multi-Tenant Database Schema
-// Phase 2 Implementation - Core Entities
+// Phase 3 Implementation - RBAC & Core Entities
 
 generator client {
   provider = "prisma-client"
@@ -26,6 +26,7 @@ model Tenant {
   
   branches      Branch[]
   users         User[]
+  roles         Role[]
   
   @@map("tenants")
 }
@@ -76,7 +77,6 @@ model User {
   departmentId  String?
   email         String    @unique
   name          String
-  role          String    @default("user")
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -84,8 +84,66 @@ model User {
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
   department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  userRoles     UserRole[]
   
   @@index([tenantId])
   @@index([email])
   @@map("users")
+}
+
+// ============================================
+// RBAC ENTITIES (Phase 3)
+// ============================================
+
+model Role {
+  id            String    @id @default(cuid())
+  tenantId      String
+  name          String    // e.g., "Admin", "Manager", "Custom Role"
+  description   String?
+  isSystem      Boolean   @default(false) // true for default roles, false for custom
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userRoles     UserRole[]
+  permissions   RolePermission[]
+  
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("roles")
+}
+
+model Permission {
+  id            String    @id @default(cuid())
+  name          String    @unique // e.g., "invoice.create", "user.delete"
+  description   String?
+  createdAt     DateTime  @default(now())
+  
+  rolePermissions RolePermission[]
+  
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String
+  roleId String
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, roleId])
+  @@map("user_roles")
 }
