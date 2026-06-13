@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+﻿// SANAD ERP SaaS - Multi-Tenant Database Schema
+// Phase 2 Implementation - Core Entities
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +8,88 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================
+// GLOBAL PLATFORM ENTITIES
+// ============================================
+
+model Tenant {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  email         String    @unique
+  status        String    @default("active") // active, suspended, inactive
+  plan          String    @default("free")   // free, pro, enterprise
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  branches      Branch[]
+  users         User[]
+  
+  @@map("tenants")
+}
+
+// ============================================
+// TENANT BUSINESS ENTITIES
+// ============================================
+
+model Branch {
+  id            String    @id @default(cuid())
+  tenantId      String
+  name          String
+  code          String
+  address       String?
+  phone         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments   Department[]
+  users         User[]
+  
+  @@index([tenantId])
+  @@map("branches")
+}
+
+model Department {
+  id            String    @id @default(cuid())
+  branchId      String
+  name          String
+  code          String
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  users         User[]
+  
+  @@index([branchId])
+  @@map("departments")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  tenantId      String
+  branchId      String?
+  departmentId  String?
+  email         String    @unique
+  name          String
+  role          String    @default("user") // admin, manager, user
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
 }
