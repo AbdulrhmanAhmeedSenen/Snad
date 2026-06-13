@@ -1,4 +1,4 @@
-﻿// SANAD ERP SaaS - Multi-Tenant Database Schema
+// SANAD ERP SaaS - Multi-Tenant Database Schema
 // Phase 2 Implementation - Core Entities
 
 generator client {
@@ -19,12 +19,11 @@ model Tenant {
   name          String
   slug          String    @unique
   email         String    @unique
-  status        String    @default("active") // active, suspended, inactive
-  plan          String    @default("free")   // free, pro, enterprise
+  status        String    @default("active")
+  plan          String    @default("free")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  // Relations
   branches      Branch[]
   users         User[]
   
@@ -46,7 +45,6 @@ model Branch {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  // Relations
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   departments   Department[]
   users         User[]
@@ -64,7 +62,6 @@ model Department {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  // Relations
   branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
   users         User[]
   
@@ -79,12 +76,11 @@ model User {
   departmentId  String?
   email         String    @unique
   name          String
-  role          String    @default("user") // admin, manager, user
+  role          String    @default("user")
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  // Relations
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
   department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
