@@ -44,6 +44,14 @@ export default function Home() {
                 <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#cbd5e1' }}>Audit Logs, Activity Logs, and Global Notification Engine</p>
               </div>
             </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <span style={{ fontSize: '1.5rem' }}>??</span>
+              <div>
+                <strong>Phase 5: CRM Solution</strong>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#cbd5e1' }}>Leads, Customers, Opportunities, and Task Management</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -52,13 +60,15 @@ export default function Home() {
           <div style={{ textAlign: 'left', fontSize: '0.9rem', lineHeight: '1.8', fontFamily: 'monospace', color: '#cbd5e1' }}>
             <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/tenants</span></p>
             <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/users</span></p>
-            <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/roles</span> (Protected by x-tenant-id)</p>
-            <p>? GET <span style={{color: '#38bdf8'}}>/api/audit-logs</span> (Protected by x-tenant-id)</p>
+            <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/roles</span> (Protected)</p>
+            <p>? GET <span style={{color: '#38bdf8'}}>/api/audit-logs</span> (Protected)</p>
+            <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/leads</span> (Protected)</p>
+            <p>? GET <span style={{color: '#38bdf8'}}>/api/opportunities</span> (Protected)</p>
           </div>
         </div>
 
         <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#64748b' }}>
-          Ready for Phase 5: CRM Solution Architecture
+          Ready for Phase 6: Quotation Platform Architecture
         </p>
       </div>
     </main>
