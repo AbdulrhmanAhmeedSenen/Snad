@@ -1,6 +1,3 @@
-// SANAD ERP SaaS - Multi-Tenant Database Schema
-// Phase 4 Implementation - Platform Core (Logs & Notifications)
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -10,162 +7,145 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============================================
-// GLOBAL & TENANT ENTITIES (From Phase 2 & 3)
-// ============================================
-
 model Tenant {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String
-  slug          String    @unique
-  email         String    @unique
-  status        String    @default("active")
-  plan          String    @default("free")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  branches      Branch[]
-  users         User[]
-  roles         Role[]
-  auditLogs     AuditLog[]
+  slug          String         @unique
+  email         String         @unique
+  status        String         @default("active")
+  plan          String         @default("free")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   activityLogs  ActivityLog[]
+  auditLogs     AuditLog[]
+  branches      Branch[]
   notifications Notification[]
-  
+  roles         Role[]
+  users         User[]
+
   @@map("tenants")
 }
 
 model Branch {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  code          String
-  address       String?
-  phone         String?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  departments   Department[]
-  users         User[]
-  
+  id          String       @id @default(cuid())
+  tenantId    String
+  name        String
+  code        String
+  address     String?
+  phone       String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments Department[]
+  users       User[]
+
   @@index([tenantId])
   @@map("branches")
 }
 
 model Department {
-  id            String    @id @default(cuid())
-  branchId      String
-  name          String
-  code          String
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  users         User[]
-  
+  id        String   @id @default(cuid())
+  branchId  String
+  name      String
+  code      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  users     User[]
+
   @@index([branchId])
   @@map("departments")
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   tenantId      String
   branchId      String?
   departmentId  String?
-  email         String    @unique
+  email         String         @unique
   name          String
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  userRoles     UserRole[]
-  auditLogs     AuditLog[]
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   activityLogs  ActivityLog[]
+  auditLogs     AuditLog[]
   notifications Notification[]
-  
+  userRoles     UserRole[]
+  branch        Branch?        @relation(fields: [branchId], references: [id])
+  department    Department?    @relation(fields: [departmentId], references: [id])
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([email])
   @@map("users")
 }
 
 model Role {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  description   String?
-  isSystem      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userRoles     UserRole[]
-  permissions   RolePermission[]
-  
+  id          String           @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions RolePermission[]
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userRoles   UserRole[]
+
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("roles")
 }
 
 model Permission {
-  id            String    @id @default(cuid())
-  name          String    @unique
-  description   String?
-  createdAt     DateTime  @default(now())
-  
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  createdAt       DateTime         @default(now())
   rolePermissions RolePermission[]
-  
+
   @@map("permissions")
 }
 
 model RolePermission {
   roleId       String
   permissionId String
-  createdAt    DateTime @default(now())
-  
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
 
 model UserRole {
-  userId String
-  roleId String
+  userId    String
+  roleId    String
   createdAt DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@id([userId, roleId])
   @@map("user_roles")
 }
 
-// ============================================
-// PLATFORM CORE ENTITIES (Phase 4)
-// ============================================
-
 model AuditLog {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String?
-  action      String   // e.g., "USER_LOGIN", "ROLE_UPDATED", "DATA_EXPORT"
-  entity      String   // e.g., "User", "Role", "Invoice"
-  entityId    String?
-  oldValue    String?  // JSON string of previous state
-  newValue    String?  // JSON string of new state
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?
+  newValue  String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
   @@index([tenantId])
   @@index([userId])
   @@index([createdAt])
@@ -176,32 +156,30 @@ model ActivityLog {
   id          String   @id @default(cuid())
   tenantId    String
   userId      String?
-  action      String   // e.g., "INVOICE_CREATED", "TASK_COMPLETED"
+  action      String
   description String
-  metadata    String?  // JSON string for extra context
+  metadata    String?
   createdAt   DateTime @default(now())
-  
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  user        User?    @relation(fields: [userId], references: [id])
+
   @@index([tenantId])
   @@index([createdAt])
   @@map("activity_logs")
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String
-  type        String   // e.g., "INFO", "WARNING", "SUCCESS", "ERROR"
-  title       String
-  message     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([userId])
   @@index([isRead])
