@@ -1,5 +1,5 @@
 // SANAD ERP SaaS - Multi-Tenant Database Schema
-// Phase 3 Implementation - RBAC & Core Entities
+// Phase 4 Implementation - Platform Core (Logs & Notifications)
 
 generator client {
   provider = "prisma-client"
@@ -11,7 +11,7 @@ datasource db {
 }
 
 // ============================================
-// GLOBAL PLATFORM ENTITIES
+// GLOBAL & TENANT ENTITIES (From Phase 2 & 3)
 // ============================================
 
 model Tenant {
@@ -27,13 +27,12 @@ model Tenant {
   branches      Branch[]
   users         User[]
   roles         Role[]
+  auditLogs     AuditLog[]
+  activityLogs  ActivityLog[]
+  notifications Notification[]
   
   @@map("tenants")
 }
-
-// ============================================
-// TENANT BUSINESS ENTITIES
-// ============================================
 
 model Branch {
   id            String    @id @default(cuid())
@@ -85,22 +84,21 @@ model User {
   branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
   department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   userRoles     UserRole[]
+  auditLogs     AuditLog[]
+  activityLogs  ActivityLog[]
+  notifications Notification[]
   
   @@index([tenantId])
   @@index([email])
   @@map("users")
 }
 
-// ============================================
-// RBAC ENTITIES (Phase 3)
-// ============================================
-
 model Role {
   id            String    @id @default(cuid())
   tenantId      String
-  name          String    // e.g., "Admin", "Manager", "Custom Role"
+  name          String
   description   String?
-  isSystem      Boolean   @default(false) // true for default roles, false for custom
+  isSystem      Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -115,7 +113,7 @@ model Role {
 
 model Permission {
   id            String    @id @default(cuid())
-  name          String    @unique // e.g., "invoice.create", "user.delete"
+  name          String    @unique
   description   String?
   createdAt     DateTime  @default(now())
   
@@ -146,4 +144,66 @@ model UserRole {
   
   @@id([userId, roleId])
   @@map("user_roles")
+}
+
+// ============================================
+// PLATFORM CORE ENTITIES (Phase 4)
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String?
+  action      String   // e.g., "USER_LOGIN", "ROLE_UPDATED", "DATA_EXPORT"
+  entity      String   // e.g., "User", "Role", "Invoice"
+  entityId    String?
+  oldValue    String?  // JSON string of previous state
+  newValue    String?  // JSON string of new state
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([tenantId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String?
+  action      String   // e.g., "INVOICE_CREATED", "TASK_COMPLETED"
+  description String
+  metadata    String?  // JSON string for extra context
+  createdAt   DateTime @default(now())
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([tenantId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  type        String   // e.g., "INFO", "WARNING", "SUCCESS", "ERROR"
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
 }
