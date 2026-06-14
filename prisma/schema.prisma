@@ -16,7 +16,6 @@ model Tenant {
   plan                String    @default("free")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
-  
   branches            Branch[]
   users               User[]
   roles               Role[]
@@ -43,7 +42,6 @@ model Tenant {
   products            Product[]
   orders              Order[]
   posDevices          POSDevice[]
-  
   @@map("tenants")
 }
 
@@ -88,6 +86,136 @@ model User {
   email               String              @unique
   name                String
   isActive            Boolean             @default(true)
+  isDeleted           Boolean             @default(false)
+  deletedAt           DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch              Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  department          Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  userRoles           UserRole[]
+  auditLogs           AuditLog[]
+  activityLogs        ActivityLog[]
+  notifications       Notification[]
+  assignedLeads       Lead[]
+  assignedCustomers   Customer[]
+  assignedOpportunities Opportunity[]
+  assignedTasks       Task[]
+  quotations          Quotation[]
+  requestedApprovals  ApprovalRequest[]   @relation("RequesterApprovals")
+  approvedApprovals   ApprovalRequest[]   @relation("ApproverApprovals")
+  employees           Employee[]
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
+}
+
+model Role {
+  id            String    @id @default(cuid())
+  tenantId      String
+  name          String
+  description   String?
+  isSystem      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userRoles     UserRole[]
+  permissions   RolePermission[]
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("roles")
+
+ = @"
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tenant {
+  id                  String    @id @default(cuid())
+  name                String
+  slug                String    @unique
+  email               String    @unique
+  status              String    @default("active")
+  plan                String    @default("free")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  branches            Branch[]
+  users               User[]
+  roles               Role[]
+  auditLogs           AuditLog[]
+  activityLogs        ActivityLog[]
+  notifications       Notification[]
+  leads               Lead[]
+  customers           Customer[]
+  opportunities       Opportunity[]
+  tasks               Task[]
+  quotations          Quotation[]
+  vendors             Vendor[]
+  purchaseOrders      PurchaseOrder[]
+  inventoryItems      InventoryItem[]
+  employees           Employee[]
+  attendanceRecords   AttendanceRecord[]
+  payrollRuns         PayrollRun[]
+  accounts            Account[]
+  journalEntries      JournalEntry[]
+  invoices            Invoice[]
+  payments            Payment[]
+  dashboardMetrics    DashboardMetric[]
+  aiInsights          AIInsight[]
+  products            Product[]
+  orders              Order[]
+  posDevices          POSDevice[]
+  @@map("tenants")
+}
+
+model Branch {
+  id            String    @id @default(cuid())
+  tenantId      String
+  name          String
+  code          String
+  address       String?
+  phone         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments   Department[]
+  users         User[]
+  posDevices    POSDevice[]
+  @@index([tenantId])
+  @@map("branches")
+}
+
+model Department {
+  id            String    @id @default(cuid())
+  branchId      String
+  name          String
+  code          String
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  users         User[]
+  employees     Employee[]
+  @@index([branchId])
+  @@map("departments")
+}
+
+model User {
+  id                  String              @id @default(cuid())
+  tenantId            String
+  branchId            String?
+  departmentId        String?
+  email               String              @unique
+  name                String
+  isActive            Boolean             @default(true)
+  isDeleted           Boolean             @default(false)
+  deletedAt           DateTime?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -236,6 +364,8 @@ model Customer {
   address       String?
   creditLimit   Float     @default(0)
   assignedUserId String?
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -531,6 +661,8 @@ model Invoice {
   dueDate       DateTime?
   totalAmount   Float     @default(0)
   status        String    @default("draft")
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -594,10 +726,6 @@ model AIInsight {
   @@map("ai_insights")
 }
 
-// ============================================
-// E-COMMERCE & POS ENTITIES (Phase 11)
-// ============================================
-
 model Product {
   id            String    @id @default(cuid())
   tenantId      String
@@ -607,12 +735,12 @@ model Product {
   price         Float
   stock         Float     @default(0)
   isActive      Boolean   @default(true)
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
-  
   @@index([tenantId])
   @@index([isActive])
   @@map("products")
@@ -622,17 +750,17 @@ model Order {
   id            String    @id @default(cuid())
   tenantId      String
   customerId    String?
-  type          String    @default("ecommerce") // ecommerce, pos
-  status        String    @default("pending")   // pending, paid, shipped, cancelled
+  type          String    @default("ecommerce")
+  status        String    @default("pending")
   totalAmount   Float     @default(0)
   currency      String    @default("USD")
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items         OrderItem[]
-  
   @@index([tenantId])
   @@index([status])
   @@map("orders")
@@ -646,10 +774,8 @@ model OrderItem {
   quantity      Float     @default(1)
   unitPrice     Float
   total         Float
-  
   order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product       Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
-  
   @@index([orderId])
   @@map("order_items")
 }
@@ -659,14 +785,12 @@ model POSDevice {
   tenantId      String
   branchId      String
   deviceCode    String    @unique
-  status        String    @default("active") // active, inactive, maintenance
+  status        String    @default("active")
   lastPing      DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  
   @@index([tenantId])
   @@index([branchId])
   @@map("pos_devices")
