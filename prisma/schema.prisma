@@ -8,171 +8,180 @@ datasource db {
 }
 
 model Tenant {
-  id                  String    @id @default(cuid())
-  name                String
-  slug                String    @unique
-  email               String    @unique
-  status              String    @default("active")
-  plan                String    @default("free")
-  maintenanceMode     Boolean   @default(false)
-  features            String?   // JSON string of enabled feature flags
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  branches            Branch[]
-  users               User[]
-  roles               Role[]
-  auditLogs           AuditLog[]
-  activityLogs        ActivityLog[]
-  notifications       Notification[]
-  leads               Lead[]
-  customers           Customer[]
-  opportunities       Opportunity[]
-  tasks               Task[]
-  quotations          Quotation[]
-  vendors             Vendor[]
-  purchaseOrders      PurchaseOrder[]
-  inventoryItems      InventoryItem[]
-  employees           Employee[]
-  attendanceRecords   AttendanceRecord[]
-  payrollRuns         PayrollRun[]
-  accounts            Account[]
-  journalEntries      JournalEntry[]
-  invoices            Invoice[]
-  payments            Payment[]
-  dashboardMetrics    DashboardMetric[]
-  aiInsights          AIInsight[]
-  products            Product[]
-  orders              Order[]
-  posDevices          POSDevice[]
-  communicationLogs   CommunicationLog[]
+  id                   String                @id @default(cuid())
+  name                 String
+  slug                 String                @unique
+  email                String                @unique
+  status               String                @default("active")
+  plan                 String                @default("free")
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  features             String?
+  maintenanceMode      Boolean               @default(false)
+  accounts             Account[]
+  activityLogs         ActivityLog[]
+  aiInsights           AIInsight[]
+  attendanceRecords    AttendanceRecord[]
+  auditLogs            AuditLog[]
+  branches             Branch[]
+  communicationLogs    CommunicationLog[]
+  customers            Customer[]
+  dashboardMetrics     DashboardMetric[]
+  employees            Employee[]
+  inventoryItems       InventoryItem[]
+  invoices             Invoice[]
+  journalEntries       JournalEntry[]
+  leads                Lead[]
+  notifications        Notification[]
+  opportunities        Opportunity[]
+  orders               Order[]
+  payments             Payment[]
+  payrollRuns          PayrollRun[]
+  posDevices           POSDevice[]
+  products             Product[]
+  purchaseOrders       PurchaseOrder[]
+  quotations           Quotation[]
+  roles                Role[]
+  tasks                Task[]
+  users                User[]
+  vendors              Vendor[]
   webhookSubscriptions WebhookSubscription[]
+
   @@map("tenants")
 }
 
 model Branch {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  code          String
-  address       String?
-  phone         String?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  departments   Department[]
-  users         User[]
-  posDevices    POSDevice[]
+  id          String       @id @default(cuid())
+  tenantId    String
+  name        String
+  code        String
+  address     String?
+  phone       String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments Department[]
+  posDevices  POSDevice[]
+  users       User[]
+
   @@index([tenantId])
   @@map("branches")
 }
 
 model Department {
-  id            String    @id @default(cuid())
-  branchId      String
-  name          String
-  code          String
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  users         User[]
-  employees     Employee[]
+  id        String     @id @default(cuid())
+  branchId  String
+  name      String
+  code      String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  branch    Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  employees Employee[]
+  users     User[]
+
   @@index([branchId])
   @@map("departments")
 }
 
 model User {
-  id                  String              @id @default(cuid())
-  tenantId            String
-  branchId            String?
-  departmentId        String?
-  email               String              @unique
-  name                String
-  isActive            Boolean             @default(true)
-  isDeleted           Boolean             @default(false)
-  deletedAt           DateTime?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch              Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  department          Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  userRoles           UserRole[]
-  auditLogs           AuditLog[]
-  activityLogs        ActivityLog[]
-  notifications       Notification[]
-  assignedLeads       Lead[]
-  assignedCustomers   Customer[]
+  id                    String            @id @default(cuid())
+  tenantId              String
+  branchId              String?
+  departmentId          String?
+  email                 String            @unique
+  name                  String
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  deletedAt             DateTime?
+  isDeleted             Boolean           @default(false)
+  activityLogs          ActivityLog[]
+  approvedApprovals     ApprovalRequest[] @relation("ApproverApprovals")
+  requestedApprovals    ApprovalRequest[] @relation("RequesterApprovals")
+  auditLogs             AuditLog[]
+  assignedCustomers     Customer[]
+  employees             Employee[]
+  assignedLeads         Lead[]
+  notifications         Notification[]
   assignedOpportunities Opportunity[]
-  assignedTasks       Task[]
-  quotations          Quotation[]
-  requestedApprovals  ApprovalRequest[]   @relation("RequesterApprovals")
-  approvedApprovals   ApprovalRequest[]   @relation("ApproverApprovals")
-  employees           Employee[]
+  quotations            Quotation[]
+  assignedTasks         Task[]
+  userRoles             UserRole[]
+  branch                Branch?           @relation(fields: [branchId], references: [id])
+  department            Department?       @relation(fields: [departmentId], references: [id])
+  tenant                Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([email])
   @@map("users")
 }
 
 model Role {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  description   String?
-  isSystem      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userRoles     UserRole[]
-  permissions   RolePermission[]
+  id          String           @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions RolePermission[]
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userRoles   UserRole[]
+
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("roles")
 }
 
 model Permission {
-  id            String    @id @default(cuid())
-  name          String    @unique
-  description   String?
-  createdAt     DateTime  @default(now())
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  createdAt       DateTime         @default(now())
   rolePermissions RolePermission[]
+
   @@map("permissions")
 }
 
 model RolePermission {
   roleId       String
   permissionId String
-  createdAt    DateTime @default(now())
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
 
 model UserRole {
-  userId String
-  roleId String
+  userId    String
+  roleId    String
   createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@id([userId, roleId])
   @@map("user_roles")
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String?
-  action      String
-  entity      String
-  entityId    String?
-  oldValue    String?
-  newValue    String?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?
+  newValue  String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
   @@index([tenantId])
   @@index([userId])
   @@index([createdAt])
@@ -188,23 +197,25 @@ model ActivityLog {
   metadata    String?
   createdAt   DateTime @default(now())
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user        User?    @relation(fields: [userId], references: [id])
+
   @@index([tenantId])
   @@index([createdAt])
   @@map("activity_logs")
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String
-  type        String
-  title       String
-  message     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([userId])
   @@index([isRead])
@@ -212,65 +223,68 @@ model Notification {
 }
 
 model Lead {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  email         String?
-  phone         String?
-  company       String?
-  status        String    @default("new")
-  source        String?
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  email          String?
+  phone          String?
+  company        String?
+  status         String   @default("new")
+  source         String?
   assignedUserId String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedUser  User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  assignedUser   User?    @relation(fields: [assignedUserId], references: [id])
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([status])
   @@map("leads")
 }
 
 model Customer {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  type          String    @default("company")
-  email         String?
-  phone         String?
-  address       String?
-  creditLimit   Float     @default(0)
+  id             String        @id @default(cuid())
+  tenantId       String
+  name           String
+  type           String        @default("company")
+  email          String?
+  phone          String?
+  address        String?
+  creditLimit    Float         @default(0)
   assignedUserId String?
-  isDeleted     Boolean   @default(false)
-  deletedAt     DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedUser  User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
-  opportunities Opportunity[]
-  quotations    Quotation[]
-  invoices      Invoice[]
-  payments      Payment[]
-  orders        Order[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  isDeleted      Boolean       @default(false)
+  assignedUser   User?         @relation(fields: [assignedUserId], references: [id])
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoices       Invoice[]
+  opportunities  Opportunity[]
+  orders         Order[]
+  payments       Payment[]
+  quotations     Quotation[]
+
   @@index([tenantId])
   @@map("customers")
 }
 
 model Opportunity {
-  id                String    @id @default(cuid())
+  id                String      @id @default(cuid())
   tenantId          String
   customerId        String
   name              String
-  stage             String    @default("prospecting")
-  value             Float     @default(0)
-  currency          String    @default("USD")
+  stage             String      @default("prospecting")
+  value             Float       @default(0)
+  currency          String      @default("USD")
   expectedCloseDate DateTime?
   assignedUserId    String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  assignedUser      User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  assignedUser      User?       @relation(fields: [assignedUserId], references: [id])
+  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   quotations        Quotation[]
+
   @@index([tenantId])
   @@index([stage])
   @@map("opportunities")
@@ -288,8 +302,9 @@ model Task {
   status            String    @default("pending")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   assignedUser      User      @relation(fields: [assignedUserId], references: [id], onDelete: Cascade)
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([assignedUserId])
   @@index([status])
@@ -297,26 +312,27 @@ model Task {
 }
 
 model Quotation {
-  id                String    @id @default(cuid())
-  tenantId          String
-  customerId        String
-  opportunityId     String?
-  quoteNumber       String    @unique
-  title             String
-  status            String    @default("draft")
-  totalAmount       Float     @default(0)
-  currency          String    @default("USD")
-  validUntil        DateTime?
-  notes             String?
-  createdByUserId   String
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  opportunity       Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
-  createdByUser     User        @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
-  items             QuotationItem[]
-  approvals         ApprovalRequest[]
+  id              String            @id @default(cuid())
+  tenantId        String
+  customerId      String
+  opportunityId   String?
+  quoteNumber     String            @unique
+  title           String
+  status          String            @default("draft")
+  totalAmount     Float             @default(0)
+  currency        String            @default("USD")
+  validUntil      DateTime?
+  notes           String?
+  createdByUserId String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  approvals       ApprovalRequest[]
+  items           QuotationItem[]
+  createdByUser   User              @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  customer        Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  opportunity     Opportunity?      @relation(fields: [opportunityId], references: [id])
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([status])
   @@index([quoteNumber])
@@ -324,138 +340,146 @@ model Quotation {
 }
 
 model QuotationItem {
-  id            String    @id @default(cuid())
-  quotationId   String
-  description   String
-  quantity      Float     @default(1)
-  unitPrice     Float
-  discountPercent Float   @default(0)
-  taxPercent    Float     @default(0)
-  total         Float
-  quotation     Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  quotationId     String
+  description     String
+  quantity        Float     @default(1)
+  unitPrice       Float
+  discountPercent Float     @default(0)
+  taxPercent      Float     @default(0)
+  total           Float
+  quotation       Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
   @@index([quotationId])
   @@map("quotation_items")
 }
 
 model ApprovalRequest {
-  id                String    @id @default(cuid())
-  quotationId       String
-  requesterUserId   String
-  approverUserId    String
-  status            String    @default("pending")
-  comments          String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  quotation         Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-  requesterUser     User      @relation("RequesterApprovals", fields: [requesterUserId], references: [id], onDelete: Cascade)
-  approverUser      User      @relation("ApproverApprovals", fields: [approverUserId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  quotationId     String
+  requesterUserId String
+  approverUserId  String
+  status          String    @default("pending")
+  comments        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  approverUser    User      @relation("ApproverApprovals", fields: [approverUserId], references: [id], onDelete: Cascade)
+  quotation       Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  requesterUser   User      @relation("RequesterApprovals", fields: [requesterUserId], references: [id], onDelete: Cascade)
+
   @@index([quotationId])
   @@index([status])
   @@map("approval_requests")
 }
 
 model Vendor {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  contactEmail  String?
-  contactPhone  String?
-  address       String?
-  taxId         String?
-  status        String    @default("active")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id             String          @id @default(cuid())
+  tenantId       String
+  name           String
+  contactEmail   String?
+  contactPhone   String?
+  address        String?
+  taxId          String?
+  status         String          @default("active")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  invoices       Invoice[]
+  payments       Payment[]
   purchaseOrders PurchaseOrder[]
-  invoices      Invoice[]
-  payments      Payment[]
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@map("vendors")
 }
 
 model PurchaseOrder {
-  id            String    @id @default(cuid())
-  tenantId      String
-  vendorId      String
-  poNumber      String    @unique
-  status        String    @default("draft")
-  totalAmount   Float     @default(0)
-  currency      String    @default("USD")
-  expectedDate  DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  vendor        Vendor    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  items         PurchaseOrderItem[]
+  id           String              @id @default(cuid())
+  tenantId     String
+  vendorId     String
+  poNumber     String              @unique
+  status       String              @default("draft")
+  totalAmount  Float               @default(0)
+  currency     String              @default("USD")
+  expectedDate DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  items        PurchaseOrderItem[]
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vendor       Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([status])
   @@map("purchase_orders")
 }
 
 model PurchaseOrderItem {
-  id            String    @id @default(cuid())
+  id              String        @id @default(cuid())
   purchaseOrderId String
-  description   String
-  quantity      Float     @default(1)
-  unitPrice     Float
-  total         Float
-  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  description     String
+  quantity        Float         @default(1)
+  unitPrice       Float
+  total           Float
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
   @@index([purchaseOrderId])
   @@map("purchase_order_items")
 }
 
 model InventoryItem {
-  id            String    @id @default(cuid())
-  tenantId      String
-  sku           String    @unique
-  name          String
-  quantity      Float     @default(0)
-  unitCost      Float     @default(0)
-  reorderLevel  Float     @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  tenantId     String
+  sku          String   @unique
+  name         String
+  quantity     Float    @default(0)
+  unitCost     Float    @default(0)
+  reorderLevel Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([sku])
   @@map("inventory_items")
 }
 
 model Employee {
-  id            String    @id @default(cuid())
-  tenantId      String
-  userId        String?
-  departmentId  String?
-  firstName     String
-  lastName      String
-  jobTitle      String
-  hireDate      DateTime
-  salary        Float     @default(0)
-  status        String    @default("active")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user          User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
-  department    Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  attendance    AttendanceRecord[]
-  payroll       PayrollRun[]
+  id           String             @id @default(cuid())
+  tenantId     String
+  userId       String?
+  departmentId String?
+  firstName    String
+  lastName     String
+  jobTitle     String
+  hireDate     DateTime
+  salary       Float              @default(0)
+  status       String             @default("active")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  attendance   AttendanceRecord[]
+  department   Department?        @relation(fields: [departmentId], references: [id])
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user         User?              @relation(fields: [userId], references: [id])
+  payroll      PayrollRun[]
+
   @@index([tenantId])
   @@index([status])
   @@map("employees")
 }
 
 model AttendanceRecord {
-  id            String    @id @default(cuid())
-  tenantId      String
-  employeeId    String
-  date          DateTime
-  checkIn       DateTime?
-  checkOut      DateTime?
-  status        String    @default("present")
-  notes         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  tenantId   String
+  employeeId String
+  date       DateTime
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     String    @default("present")
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([employeeId])
   @@index([date])
@@ -463,21 +487,22 @@ model AttendanceRecord {
 }
 
 model PayrollRun {
-  id            String    @id @default(cuid())
-  tenantId      String
-  employeeId    String
-  periodStart   DateTime
-  periodEnd     DateTime
-  baseSalary    Float
-  deductions    Float     @default(0)
-  bonuses       Float     @default(0)
-  netPay        Float
-  status        String    @default("draft")
-  paidAt        DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  tenantId    String
+  employeeId  String
+  periodStart DateTime
+  periodEnd   DateTime
+  baseSalary  Float
+  deductions  Float     @default(0)
+  bonuses     Float     @default(0)
+  netPay      Float
+  status      String    @default("draft")
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([employeeId])
   @@index([status])
@@ -485,43 +510,46 @@ model PayrollRun {
 }
 
 model Account {
-  id            String    @id @default(cuid())
-  tenantId      String
-  code          String    @unique
-  name          String
-  type          String
-  balance       Float     @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  journalLines  JournalEntryLine[]
+  id           String             @id @default(cuid())
+  tenantId     String
+  code         String             @unique
+  name         String
+  type         String
+  balance      Float              @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  journalLines JournalEntryLine[]
+
   @@index([tenantId])
   @@map("accounts")
 }
 
 model JournalEntry {
-  id            String    @id @default(cuid())
-  tenantId      String
-  date          DateTime  @default(now())
-  description   String
-  status        String    @default("draft")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  lines         JournalEntryLine[]
+  id          String             @id @default(cuid())
+  tenantId    String
+  date        DateTime           @default(now())
+  description String
+  status      String             @default("draft")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lines       JournalEntryLine[]
+
   @@index([tenantId])
   @@map("journal_entries")
 }
 
 model JournalEntryLine {
-  id                String        @id @default(cuid())
-  journalEntryId    String
-  accountId         String
-  debit             Float         @default(0)
-  credit            Float         @default(0)
-  description       String?
-  journalEntry      JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
-  account           Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  journalEntryId String
+  accountId      String
+  debit          Float        @default(0)
+  credit         Float        @default(0)
+  description    String?
+  account        Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+
   @@index([journalEntryId])
   @@map("journal_entry_lines")
 }
@@ -537,34 +565,36 @@ model Invoice {
   dueDate       DateTime?
   totalAmount   Float     @default(0)
   status        String    @default("draft")
-  isDeleted     Boolean   @default(false)
-  deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  isDeleted     Boolean   @default(false)
+  customer      Customer? @relation(fields: [customerId], references: [id])
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  vendor        Vendor?   @relation(fields: [vendorId], references: [id])
   payments      Payment[]
+
   @@index([tenantId])
   @@index([status])
   @@map("invoices")
 }
 
 model Payment {
-  id            String    @id @default(cuid())
-  tenantId      String
-  invoiceId     String?
-  customerId    String?
-  vendorId      String?
-  amount        Float
-  date          DateTime  @default(now())
-  method        String    @default("cash")
-  status        String    @default("completed")
-  createdAt     DateTime  @default(now())
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  invoice       Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
-  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  id         String    @id @default(cuid())
+  tenantId   String
+  invoiceId  String?
+  customerId String?
+  vendorId   String?
+  amount     Float
+  date       DateTime  @default(now())
+  method     String    @default("cash")
+  status     String    @default("completed")
+  createdAt  DateTime  @default(now())
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id])
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vendor     Vendor?   @relation(fields: [vendorId], references: [id])
+
   @@index([tenantId])
   @@index([invoiceId])
   @@index([customerId])
@@ -573,14 +603,15 @@ model Payment {
 }
 
 model DashboardMetric {
-  id          String   @id @default(cuid())
-  tenantId    String
-  metricType  String
-  value       Float
-  period      String
-  date        DateTime
-  createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  tenantId   String
+  metricType String
+  value      Float
+  period     String
+  date       DateTime
+  createdAt  DateTime @default(now())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([metricType])
   @@index([date])
@@ -597,92 +628,98 @@ model AIInsight {
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([category])
   @@map("ai_insights")
 }
 
 model Product {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  description   String?
-  sku           String    @unique
-  price         Float
-  stock         Float     @default(0)
-  isActive      Boolean   @default(true)
-  isDeleted     Boolean   @default(false)
-  deletedAt     DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  orderItems    OrderItem[]
+  id          String      @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  sku         String      @unique
+  price       Float
+  stock       Float       @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  isDeleted   Boolean     @default(false)
+  orderItems  OrderItem[]
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([isActive])
   @@map("products")
 }
 
 model Order {
-  id            String    @id @default(cuid())
-  tenantId      String
-  customerId    String?
-  type          String    @default("ecommerce")
-  status        String    @default("pending")
-  totalAmount   Float     @default(0)
-  currency      String    @default("USD")
-  isDeleted     Boolean   @default(false)
-  deletedAt     DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  items         OrderItem[]
+  id          String      @id @default(cuid())
+  tenantId    String
+  customerId  String?
+  type        String      @default("ecommerce")
+  status      String      @default("pending")
+  totalAmount Float       @default(0)
+  currency    String      @default("USD")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  isDeleted   Boolean     @default(false)
+  items       OrderItem[]
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([status])
   @@map("orders")
 }
 
 model OrderItem {
-  id            String    @id @default(cuid())
-  orderId       String
-  productId     String?
-  productName   String
-  quantity      Float     @default(1)
-  unitPrice     Float
-  total         Float
-  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product       Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String?
+  productName String
+  quantity    Float    @default(1)
+  unitPrice   Float
+  total       Float
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
+
   @@index([orderId])
   @@map("order_items")
 }
 
 model POSDevice {
-  id            String    @id @default(cuid())
-  tenantId      String
-  branchId      String
-  deviceCode    String    @unique
-  status        String    @default("active")
-  lastPing      DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  tenantId   String
+  branchId   String
+  deviceCode String    @unique
+  status     String    @default("active")
+  lastPing   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  branch     Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([branchId])
   @@map("pos_devices")
 }
 
 model CommunicationLog {
-  id          String   @id @default(cuid())
-  tenantId    String
-  type        String
-  recipient   String
-  subject     String?
-  content     String
-  status      String   @default("pending")
-  metadata    String?
-  createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  tenantId  String
+  type      String
+  recipient String
+  subject   String?
+  content   String
+  status    String   @default("pending")
+  metadata  String?
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([type])
   @@index([status])
@@ -690,15 +727,16 @@ model CommunicationLog {
 }
 
 model WebhookSubscription {
-  id          String   @id @default(cuid())
-  tenantId    String
-  url         String
-  events      String
-  isActive    Boolean  @default(true)
-  secret      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  tenantId  String
+  url       String
+  events    String
+  isActive  Boolean  @default(true)
+  secret    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
   @@index([isActive])
   @@map("webhook_subscriptions")

@@ -18,20 +18,19 @@ export default function Home() {
         <p style={{ fontSize: '1.2rem', marginBottom: '2rem', color: '#94a3b8' }}>Enterprise Multi-Tenant Platform</p>
         
         <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '2rem', borderRadius: '16px', border: '2px solid rgba(34, 197, 94, 0.5)', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#4ade80' }}>🚀 PRODUCTION READY 🚀</h2>
+          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#4ade80' }}>🚀 ALL 15 PHASES COMPLETED 🚀</h2>
           <p style={{ fontSize: '1.1rem', color: '#cbd5e1', lineHeight: '1.6' }}>
-            All 14 architectural phases have been successfully implemented, tested, and deployed. 
-            The system is now a fully functional, secure, and scalable Enterprise SaaS platform.
+            The SANAD Global AI ERP SaaS platform is now fully implemented, tested, and production-ready. 
+            Covering Database, RBAC, CRM, ERP, HRM, Accounting, AI Analytics, E-commerce, Security, and Website Building.
           </p>
         </div>
 
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fbbf24' }}>🔗 Core Production Endpoints</h3>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fbbf24' }}>🔗 New Phase 15 Endpoints</h3>
           <div style={{ textAlign: 'left', fontSize: '0.9rem', lineHeight: '1.8', fontFamily: 'monospace', color: '#cbd5e1' }}>
-            <p>• <span style={{color: '#4ade80'}}>/api/health</span> (System & Database Status)</p>
-            <p>• <span style={{color: '#38bdf8'}}>/api/tenants</span> | <span style={{color: '#38bdf8'}}>/api/users</span> | <span style={{color: '#38bdf8'}}>/api/roles</span></p>
-            <p>• <span style={{color: '#a855f7'}}>/api/quotations</span> | <span style={{color: '#eab308'}}>/api/invoices</span> | <span style={{color: '#ec4899'}}>/api/orders</span></p>
-            <p>• <span style={{color: '#3b82f6'}}>/api/communications</span> | <span style={{color: '#38bdf8'}}>/api/export</span></p>
+            <p>• GET <span style={{color: '#38bdf8'}}>/api/websites</span> (Website & Page Management)</p>
+            <p>• GET <span style={{color: '#ec4899'}}>/api/carts</span> (Shopping Cart & Customer Journey)</p>
+            <p>• GET <span style={{color: '#4ade80'}}>/api/health</span> (System Status)</p>
           </div>
         </div>
 
