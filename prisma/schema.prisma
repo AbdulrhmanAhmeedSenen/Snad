@@ -38,6 +38,11 @@ model Tenant {
   journalEntries      JournalEntry[]
   invoices            Invoice[]
   payments            Payment[]
+  dashboardMetrics    DashboardMetric[]
+  aiInsights          AIInsight[]
+  products            Product[]
+  orders              Order[]
+  posDevices          POSDevice[]
   
   @@map("tenants")
 }
@@ -52,11 +57,10 @@ model Branch {
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   departments   Department[]
   users         User[]
-  
+  posDevices    POSDevice[]
   @@index([tenantId])
   @@map("branches")
 }
@@ -69,11 +73,9 @@ model Department {
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
   users         User[]
   employees     Employee[]
-  
   @@index([branchId])
   @@map("departments")
 }
@@ -88,7 +90,6 @@ model User {
   isActive            Boolean             @default(true)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  
   tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch              Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
   department          Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
@@ -104,7 +105,6 @@ model User {
   requestedApprovals  ApprovalRequest[]   @relation("RequesterApprovals")
   approvedApprovals   ApprovalRequest[]   @relation("ApproverApprovals")
   employees           Employee[]
-  
   @@index([tenantId])
   @@index([email])
   @@map("users")
@@ -118,11 +118,9 @@ model Role {
   isSystem      Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userRoles     UserRole[]
   permissions   RolePermission[]
-  
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("roles")
@@ -246,6 +244,7 @@ model Customer {
   quotations    Quotation[]
   invoices      Invoice[]
   payments      Payment[]
+  orders        Order[]
   @@index([tenantId])
   @@map("customers")
 }
@@ -479,10 +478,6 @@ model PayrollRun {
   @@map("payroll_runs")
 }
 
-// ============================================
-// ACCOUNTING ENTITIES (Phase 9)
-// ============================================
-
 model Account {
   id            String    @id @default(cuid())
   tenantId      String
@@ -492,10 +487,8 @@ model Account {
   balance       Float     @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   journalLines  JournalEntryLine[]
-  
   @@index([tenantId])
   @@map("accounts")
 }
@@ -508,10 +501,8 @@ model JournalEntry {
   status        String    @default("draft")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   lines         JournalEntryLine[]
-  
   @@index([tenantId])
   @@map("journal_entries")
 }
@@ -523,10 +514,8 @@ model JournalEntryLine {
   debit             Float         @default(0)
   credit            Float         @default(0)
   description       String?
-  
   journalEntry      JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
   account           Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  
   @@index([journalEntryId])
   @@map("journal_entry_lines")
 }
@@ -544,12 +533,10 @@ model Invoice {
   status        String    @default("draft")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
   payments      Payment[]
-  
   @@index([tenantId])
   @@index([status])
   @@map("invoices")
@@ -566,15 +553,121 @@ model Payment {
   method        String    @default("cash")
   status        String    @default("completed")
   createdAt     DateTime  @default(now())
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   invoice       Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
   customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
-  
   @@index([tenantId])
   @@index([invoiceId])
   @@index([customerId])
   @@index([vendorId])
   @@map("payments")
+}
+
+model DashboardMetric {
+  id          String   @id @default(cuid())
+  tenantId    String
+  metricType  String
+  value       Float
+  period      String
+  date        DateTime
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@index([tenantId])
+  @@index([metricType])
+  @@index([date])
+  @@map("dashboard_metrics")
+}
+
+model AIInsight {
+  id          String   @id @default(cuid())
+  tenantId    String
+  category    String
+  title       String
+  description String
+  confidence  Float    @default(0.0)
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@index([tenantId])
+  @@index([category])
+  @@map("ai_insights")
+}
+
+// ============================================
+// E-COMMERCE & POS ENTITIES (Phase 11)
+// ============================================
+
+model Product {
+  id            String    @id @default(cuid())
+  tenantId      String
+  name          String
+  description   String?
+  sku           String    @unique
+  price         Float
+  stock         Float     @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("products")
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  tenantId      String
+  customerId    String?
+  type          String    @default("ecommerce") // ecommerce, pos
+  status        String    @default("pending")   // pending, paid, shipped, cancelled
+  totalAmount   Float     @default(0)
+  currency      String    @default("USD")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+  
+  @@index([tenantId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String    @id @default(cuid())
+  orderId       String
+  productId     String?
+  productName   String
+  quantity      Float     @default(1)
+  unitPrice     Float
+  total         Float
+  
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model POSDevice {
+  id            String    @id @default(cuid())
+  tenantId      String
+  branchId      String
+  deviceCode    String    @unique
+  status        String    @default("active") // active, inactive, maintenance
+  lastPing      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("pos_devices")
 }

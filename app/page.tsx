@@ -29,9 +29,11 @@ export default function Home() {
               { icon: '??', title: 'Phase 6: Quotation Platform', desc: 'Quotes, Items, Pricing, Approvals' },
               { icon: '??', title: 'Phase 7: ERP Operations', desc: 'Inventory, Purchase Orders, Vendors' },
               { icon: '??', title: 'Phase 8: HRM Solution', desc: 'Employees, Attendance, Payroll Management' },
-              { icon: '??', title: 'Phase 9: Accounting & Finance', desc: 'Chart of Accounts, Invoices, Journal Entries' }
+              { icon: '??', title: 'Phase 9: Accounting & Finance', desc: 'Chart of Accounts, Invoices, Journal Entries' },
+              { icon: '??', title: 'Phase 10: AI & Analytics', desc: 'Dashboard Metrics, AI Insights, Predictive Analytics' },
+              { icon: '??', title: 'Phase 11: E-commerce & POS', desc: 'Product Catalog, Orders, POS Device Integration' }
             ].map((phase, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: idx === 7 ? 'rgba(234, 179, 8, 0.1)' : 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', border: idx === 7 ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)' }}>
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: idx === 9 ? 'rgba(236, 72, 153, 0.1)' : 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', border: idx === 9 ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)' }}>
                 <span style={{ fontSize: '1.5rem' }}>{phase.icon}</span>
                 <div>
                   <strong>{phase.title}</strong>
@@ -48,13 +50,13 @@ export default function Home() {
             <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/tenants</span> | <span style={{color: '#38bdf8'}}>/api/users</span> | <span style={{color: '#38bdf8'}}>/api/roles</span></p>
             <p>? GET <span style={{color: '#38bdf8'}}>/api/audit-logs</span> (Protected)</p>
             <p>? GET/POST <span style={{color: '#38bdf8'}}>/api/leads</span> | <span style={{color: '#38bdf8'}}>/api/employees</span> (Protected)</p>
-            <p>? GET/POST <span style={{color: '#a855f7'}}>/api/quotations</span> (Protected)</p>
-            <p>? GET/POST <span style={{color: '#eab308'}}>/api/invoices</span> (Protected)</p>
+            <p>? GET/POST <span style={{color: '#a855f7'}}>/api/quotations</span> | <span style={{color: '#eab308'}}>/api/invoices</span> (Protected)</p>
+            <p>? GET/POST <span style={{color: '#a855f7'}}>/api/analytics</span> | <span style={{color: '#ec4899'}}>/api/orders</span> (Protected)</p>
           </div>
         </div>
 
         <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#64748b' }}>
-          Core ERP System Complete. Ready for Advanced AI & Analytics Integration.
+          ?? Core ERP + E-commerce System Complete. Ready for Phase 12: Security & Compliance Hardening.
         </p>
       </div>
     </main>
