@@ -2,139 +2,125 @@ generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
 }
-
-datasource db {
-  provider = "postgresql"
-}
+datasource db { provider = "postgresql" }
 
 model Tenant {
-  id            String    @id @default(cuid())
-  name          String
-  slug          String    @unique
-  email         String    @unique
-  status        String    @default("active")
-  plan          String    @default("free")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  branches      Branch[]
-  users         User[]
-  roles         Role[]
-  auditLogs     AuditLog[]
-  activityLogs  ActivityLog[]
+  id String @id @default(cuid())
+  name String
+  slug String @unique
+  email String @unique
+  status String @default("active")
+  plan String @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  branches Branch[]
+  users User[]
+  roles Role[]
+  auditLogs AuditLog[]
+  activityLogs ActivityLog[]
   notifications Notification[]
-  leads         Lead[]
-  customers     Customer[]
+  leads Lead[]
+  customers Customer[]
   opportunities Opportunity[]
-  tasks         Task[]
-  quotations    Quotation[]
-  
+  tasks Task[]
+  quotations Quotation[]
+  vendors Vendor[]
+  products Product[]
+  purchaseOrders PurchaseOrder[]
   @@map("tenants")
 }
 
 model Branch {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  code          String
-  address       String?
-  phone         String?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  departments   Department[]
-  users         User[]
-  
+  id String @id @default(cuid())
+  tenantId String
+  name String
+  code String
+  address String?
+  phone String?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments Department[]
+  users User[]
   @@index([tenantId])
   @@map("branches")
 }
 
 model Department {
-  id            String    @id @default(cuid())
-  branchId      String
-  name          String
-  code          String
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  users         User[]
-  
+  id String @id @default(cuid())
+  branchId String
+  name String
+  code String
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  users User[]
   @@index([branchId])
   @@map("departments")
 }
 
 model User {
-  id                  String              @id @default(cuid())
-  tenantId            String
-  branchId            String?
-  departmentId        String?
-  email               String              @unique
-  name                String
-  isActive            Boolean             @default(true)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  
-  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch              Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  department          Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  userRoles           UserRole[]
-  auditLogs           AuditLog[]
-  activityLogs        ActivityLog[]
-  notifications       Notification[]
-  assignedLeads       Lead[]
-  assignedCustomers   Customer[]
+  id String @id @default(cuid())
+  tenantId String
+  branchId String?
+  departmentId String?
+  email String @unique
+  name String
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  userRoles UserRole[]
+  auditLogs AuditLog[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
+  assignedLeads Lead[]
+  assignedCustomers Customer[]
   assignedOpportunities Opportunity[]
-  assignedTasks       Task[]
-  quotations          Quotation[]
-  requestedApprovals  ApprovalRequest[]   @relation("RequesterApprovals")
-  approvedApprovals   ApprovalRequest[]   @relation("ApproverApprovals")
-  
+  assignedTasks Task[]
+  quotations Quotation[]
+  requestedApprovals ApprovalRequest[] @relation("RequesterApprovals")
+  approvedApprovals ApprovalRequest[] @relation("ApproverApprovals")
   @@index([tenantId])
   @@index([email])
   @@map("users")
 }
 
 model Role {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  description   String?
-  isSystem      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userRoles     UserRole[]
-  permissions   RolePermission[]
-  
+  id String @id @default(cuid())
+  tenantId String
+  name String
+  description String?
+  isSystem Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userRoles UserRole[]
+  permissions RolePermission[]
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("roles")
 }
 
 model Permission {
-  id            String    @id @default(cuid())
-  name          String    @unique
-  description   String?
-  createdAt     DateTime  @default(now())
-  
+  id String @id @default(cuid())
+  name String @unique
+  description String?
+  createdAt DateTime @default(now())
   rolePermissions RolePermission[]
-  
   @@map("permissions")
 }
 
 model RolePermission {
-  roleId       String
+  roleId String
   permissionId String
-  createdAt    DateTime @default(now())
-  
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  
+  createdAt DateTime @default(now())
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
@@ -143,30 +129,26 @@ model UserRole {
   userId String
   roleId String
   createdAt DateTime @default(now())
-  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  
   @@id([userId, roleId])
   @@map("user_roles")
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String?
-  action      String
-  entity      String
-  entityId    String?
-  oldValue    String?
-  newValue    String?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  id String @id @default(cuid())
+  tenantId String
+  userId String?
+  action String
+  entity String
+  entityId String?
+  oldValue String?
+  newValue String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   @@index([tenantId])
   @@index([userId])
   @@index([createdAt])
@@ -174,35 +156,31 @@ model AuditLog {
 }
 
 model ActivityLog {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String?
-  action      String
+  id String @id @default(cuid())
+  tenantId String
+  userId String?
+  action String
   description String
-  metadata    String?
-  createdAt   DateTime @default(now())
-  
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  metadata String?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   @@index([tenantId])
   @@index([createdAt])
   @@map("activity_logs")
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  tenantId    String
-  userId      String
-  type        String
-  title       String
-  message     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(cuid())
+  tenantId String
+  userId String
+  type String
+  title String
+  message String
+  isRead Boolean @default(false)
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([tenantId])
   @@index([userId])
   @@index([isRead])
@@ -210,87 +188,79 @@ model Notification {
 }
 
 model Lead {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  email         String?
-  phone         String?
-  company       String?
-  status        String    @default("new")
-  source        String?
+  id String @id @default(cuid())
+  tenantId String
+  name String
+  email String?
+  phone String?
+  company String?
+  status String @default("new")
+  source String?
   assignedUserId String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedUser  User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedUser User? @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   @@index([tenantId])
   @@index([status])
   @@map("leads")
 }
 
 model Customer {
-  id            String    @id @default(cuid())
-  tenantId      String
-  name          String
-  type          String    @default("company")
-  email         String?
-  phone         String?
-  address       String?
-  creditLimit   Float     @default(0)
+  id String @id @default(cuid())
+  tenantId String
+  name String
+  type String @default("company")
+  email String?
+  phone String?
+  address String?
+  creditLimit Float @default(0)
   assignedUserId String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedUser  User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedUser User? @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   opportunities Opportunity[]
-  quotations    Quotation[]
-  
+  quotations Quotation[]
   @@index([tenantId])
   @@map("customers")
 }
 
 model Opportunity {
-  id                String    @id @default(cuid())
-  tenantId          String
-  customerId        String
-  name              String
-  stage             String    @default("prospecting")
-  value             Float     @default(0)
-  currency          String    @default("USD")
+  id String @id @default(cuid())
+  tenantId String
+  customerId String
+  name String
+  stage String @default("prospecting")
+  value Float @default(0)
+  currency String @default("USD")
   expectedCloseDate DateTime?
-  assignedUserId    String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  assignedUser      User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
-  quotations        Quotation[]
-  
+  assignedUserId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignedUser User? @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  quotations Quotation[]
   @@index([tenantId])
   @@index([stage])
   @@map("opportunities")
 }
 
 model Task {
-  id                String    @id @default(cuid())
-  tenantId          String
-  assignedUserId    String
-  relatedEntityId   String?
+  id String @id @default(cuid())
+  tenantId String
+  assignedUserId String
+  relatedEntityId String?
   relatedEntityType String?
-  title             String
-  description       String?
-  dueDate           DateTime?
-  status            String    @default("pending")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedUser      User      @relation(fields: [assignedUserId], references: [id], onDelete: Cascade)
-  
+  title String
+  description String?
+  dueDate DateTime?
+  status String @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedUser User @relation(fields: [assignedUserId], references: [id], onDelete: Cascade)
   @@index([tenantId])
   @@index([assignedUserId])
   @@index([status])
@@ -298,28 +268,26 @@ model Task {
 }
 
 model Quotation {
-  id                String    @id @default(cuid())
-  tenantId          String
-  customerId        String
-  opportunityId     String?
-  quoteNumber       String    @unique
-  title             String
-  status            String    @default("draft")
-  totalAmount       Float     @default(0)
-  currency          String    @default("USD")
-  validUntil        DateTime?
-  notes             String?
-  createdByUserId   String
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  opportunity       Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
-  createdByUser     User        @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
-  items             QuotationItem[]
-  approvals         ApprovalRequest[]
-  
+  id String @id @default(cuid())
+  tenantId String
+  customerId String
+  opportunityId String?
+  quoteNumber String @unique
+  title String
+  status String @default("draft")
+  totalAmount Float @default(0)
+  currency String @default("USD")
+  validUntil DateTime?
+  notes String?
+  createdByUserId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  createdByUser User @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  items QuotationItem[]
+  approvals ApprovalRequest[]
   @@index([tenantId])
   @@index([status])
   @@index([quoteNumber])
@@ -327,36 +295,93 @@ model Quotation {
 }
 
 model QuotationItem {
-  id            String    @id @default(cuid())
-  quotationId   String
-  description   String
-  quantity      Float     @default(1)
-  unitPrice     Float
-  discountPercent Float   @default(0)
-  taxPercent    Float     @default(0)
-  total         Float
-  
-  quotation     Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(cuid())
+  quotationId String
+  description String
+  quantity Float @default(1)
+  unitPrice Float
+  discountPercent Float @default(0)
+  taxPercent Float @default(0)
+  total Float
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
   @@index([quotationId])
   @@map("quotation_items")
 }
 
 model ApprovalRequest {
-  id                String    @id @default(cuid())
-  quotationId       String
-  requesterUserId   String
-  approverUserId    String
-  status            String    @default("pending")
-  comments          String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  quotation         Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-  requesterUser     User      @relation("RequesterApprovals", fields: [requesterUserId], references: [id], onDelete: Cascade)
-  approverUser      User      @relation("ApproverApprovals", fields: [approverUserId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(cuid())
+  quotationId String
+  requesterUserId String
+  approverUserId String
+  status String @default("pending")
+  comments String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  requesterUser User @relation("RequesterApprovals", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  approverUser User @relation("ApproverApprovals", fields: [approverUserId], references: [id], onDelete: Cascade)
   @@index([quotationId])
   @@index([status])
   @@map("approval_requests")
+}
+
+// ==========================================
+// ERP MODELS (Phase 7)
+// ==========================================
+
+model Vendor {
+  id String @id @default(cuid())
+  tenantId String
+  name String
+  contactPerson String?
+  email String?
+  phone String?
+  address String?
+  taxId String?
+  status String @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+  purchaseOrders PurchaseOrder[]
+  @@index([tenantId])
+  @@map("vendors")
+}
+
+model Product {
+  id String @id @default(cuid())
+  tenantId String
+  vendorId String?
+  sku String @unique
+  name String
+  description String?
+  unitPrice Float @default(0)
+  stockQuantity Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vendor Vendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  @@index([tenantId])
+  @@index([sku])
+  @@map("products")
+}
+
+model PurchaseOrder {
+  id String @id @default(cuid())
+  tenantId String
+  vendorId String
+  poNumber String @unique
+  status String @default("draft") // draft, ordered, received, cancelled
+  totalAmount Float @default(0)
+  currency String @default("USD")
+  expectedDeliveryDate DateTime?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  @@index([tenantId])
+  @@index([status])
+  @@index([poNumber])
+  @@map("purchase_orders")
 }
