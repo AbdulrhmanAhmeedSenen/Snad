@@ -8,32 +8,36 @@ datasource db {
 }
 
 model Tenant {
-  id            String    @id @default(cuid())
-  name          String
-  slug          String    @unique
-  email         String    @unique
-  status        String    @default("active")
-  plan          String    @default("free")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  name                String
+  slug                String    @unique
+  email               String    @unique
+  status              String    @default("active")
+  plan                String    @default("free")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
   
-  branches      Branch[]
-  users         User[]
-  roles         Role[]
-  auditLogs     AuditLog[]
-  activityLogs  ActivityLog[]
-  notifications Notification[]
-  leads         Lead[]
-  customers     Customer[]
-  opportunities Opportunity[]
-  tasks         Task[]
-  quotations    Quotation[]
-  vendors       Vendor[]
-  purchaseOrders PurchaseOrder[]
-  inventoryItems InventoryItem[]
-  employees     Employee[]
-  attendanceRecords AttendanceRecord[]
-  payrollRuns   PayrollRun[]
+  branches            Branch[]
+  users               User[]
+  roles               Role[]
+  auditLogs           AuditLog[]
+  activityLogs        ActivityLog[]
+  notifications       Notification[]
+  leads               Lead[]
+  customers           Customer[]
+  opportunities       Opportunity[]
+  tasks               Task[]
+  quotations          Quotation[]
+  vendors             Vendor[]
+  purchaseOrders      PurchaseOrder[]
+  inventoryItems      InventoryItem[]
+  employees           Employee[]
+  attendanceRecords   AttendanceRecord[]
+  payrollRuns         PayrollRun[]
+  accounts            Account[]
+  journalEntries      JournalEntry[]
+  invoices            Invoice[]
+  payments            Payment[]
   
   @@map("tenants")
 }
@@ -99,7 +103,7 @@ model User {
   quotations          Quotation[]
   requestedApprovals  ApprovalRequest[]   @relation("RequesterApprovals")
   approvedApprovals   ApprovalRequest[]   @relation("ApproverApprovals")
-  employees           Employee[]          // <-- ??? ?? ??????? ??????
+  employees           Employee[]
   
   @@index([tenantId])
   @@index([email])
@@ -240,6 +244,8 @@ model Customer {
   assignedUser  User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   opportunities Opportunity[]
   quotations    Quotation[]
+  invoices      Invoice[]
+  payments      Payment[]
   @@index([tenantId])
   @@map("customers")
 }
@@ -356,6 +362,8 @@ model Vendor {
   updatedAt     DateTime  @updatedAt
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   purchaseOrders PurchaseOrder[]
+  invoices      Invoice[]
+  payments      Payment[]
   @@index([tenantId])
   @@map("vendors")
 }
@@ -407,10 +415,6 @@ model InventoryItem {
   @@map("inventory_items")
 }
 
-// ============================================
-// HRM ENTITIES (Phase 8)
-// ============================================
-
 model Employee {
   id            String    @id @default(cuid())
   tenantId      String
@@ -424,13 +428,11 @@ model Employee {
   status        String    @default("active")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user          User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   department    Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   attendance    AttendanceRecord[]
   payroll       PayrollRun[]
-  
   @@index([tenantId])
   @@index([status])
   @@map("employees")
@@ -447,10 +449,8 @@ model AttendanceRecord {
   notes         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
   @@index([tenantId])
   @@index([employeeId])
   @@index([date])
@@ -471,12 +471,110 @@ model PayrollRun {
   paidAt        DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
   @@index([tenantId])
   @@index([employeeId])
   @@index([status])
   @@map("payroll_runs")
+}
+
+// ============================================
+// ACCOUNTING ENTITIES (Phase 9)
+// ============================================
+
+model Account {
+  id            String    @id @default(cuid())
+  tenantId      String
+  code          String    @unique
+  name          String
+  type          String
+  balance       Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  journalLines  JournalEntryLine[]
+  
+  @@index([tenantId])
+  @@map("accounts")
+}
+
+model JournalEntry {
+  id            String    @id @default(cuid())
+  tenantId      String
+  date          DateTime  @default(now())
+  description   String
+  status        String    @default("draft")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lines         JournalEntryLine[]
+  
+  @@index([tenantId])
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id                String        @id @default(cuid())
+  journalEntryId    String
+  accountId         String
+  debit             Float         @default(0)
+  credit            Float         @default(0)
+  description       String?
+  
+  journalEntry      JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account           Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@index([journalEntryId])
+  @@map("journal_entry_lines")
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  tenantId      String
+  customerId    String?
+  vendorId      String?
+  type          String
+  invoiceNumber String    @unique
+  date          DateTime  @default(now())
+  dueDate       DateTime?
+  totalAmount   Float     @default(0)
+  status        String    @default("draft")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  payments      Payment[]
+  
+  @@index([tenantId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  tenantId      String
+  invoiceId     String?
+  customerId    String?
+  vendorId      String?
+  amount        Float
+  date          DateTime  @default(now())
+  method        String    @default("cash")
+  status        String    @default("completed")
+  createdAt     DateTime  @default(now())
+  
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice       Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  
+  @@index([tenantId])
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([vendorId])
+  @@map("payments")
 }
