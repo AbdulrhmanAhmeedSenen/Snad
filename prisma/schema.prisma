@@ -14,6 +14,8 @@ model Tenant {
   email               String    @unique
   status              String    @default("active")
   plan                String    @default("free")
+  maintenanceMode     Boolean   @default(false)
+  features            String?   // JSON string of enabled feature flags
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   branches            Branch[]
@@ -670,23 +672,17 @@ model POSDevice {
   @@map("pos_devices")
 }
 
-// ============================================
-// COMMUNICATION PLATFORM ENTITIES (Phase 13)
-// ============================================
-
 model CommunicationLog {
   id          String   @id @default(cuid())
   tenantId    String
-  type        String   // email, sms, in_app, webhook
-  recipient   String   // email address, phone number, or user_id
+  type        String
+  recipient   String
   subject     String?
   content     String
-  status      String   @default("pending") // pending, sent, delivered, failed
-  metadata    String?  // JSON string for provider response or error details
+  status      String   @default("pending")
+  metadata    String?
   createdAt   DateTime @default(now())
-  
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
   @@index([tenantId])
   @@index([type])
   @@index([status])
@@ -697,14 +693,12 @@ model WebhookSubscription {
   id          String   @id @default(cuid())
   tenantId    String
   url         String
-  events      String   // JSON array of event names (e.g., ["order.created", "invoice.paid"])
+  events      String
   isActive    Boolean  @default(true)
-  secret      String   // For payload signature verification
+  secret      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
   @@index([tenantId])
   @@index([isActive])
   @@map("webhook_subscriptions")
