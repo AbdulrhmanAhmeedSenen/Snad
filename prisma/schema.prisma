@@ -42,6 +42,8 @@ model Tenant {
   products            Product[]
   orders              Order[]
   posDevices          POSDevice[]
+  communicationLogs   CommunicationLog[]
+  webhookSubscriptions WebhookSubscription[]
   @@map("tenants")
 }
 
@@ -666,4 +668,44 @@ model POSDevice {
   @@index([tenantId])
   @@index([branchId])
   @@map("pos_devices")
+}
+
+// ============================================
+// COMMUNICATION PLATFORM ENTITIES (Phase 13)
+// ============================================
+
+model CommunicationLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  type        String   // email, sms, in_app, webhook
+  recipient   String   // email address, phone number, or user_id
+  subject     String?
+  content     String
+  status      String   @default("pending") // pending, sent, delivered, failed
+  metadata    String?  // JSON string for provider response or error details
+  createdAt   DateTime @default(now())
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([type])
+  @@index([status])
+  @@map("communication_logs")
+}
+
+model WebhookSubscription {
+  id          String   @id @default(cuid())
+  tenantId    String
+  url         String
+  events      String   // JSON array of event names (e.g., ["order.created", "invoice.paid"])
+  isActive    Boolean  @default(true)
+  secret      String   // For payload signature verification
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("webhook_subscriptions")
 }
